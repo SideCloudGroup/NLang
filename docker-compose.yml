@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  nlang:
+    image: ghcr.io/sidecloudgroup/nlang:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./data:/app/pb_data
