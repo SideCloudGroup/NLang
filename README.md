@@ -11,7 +11,7 @@
 
 ### 使用 Docker Compose (推荐)
 
-1. 下载 `docker-compose.yml` 和 `config.example.toml`：
+1. 下载 `docker-compose.yml`：
 
 ```bash
 wget https://github.com/SideCloudGroup/NLang/raw/refs/heads/main/docker-compose.yml
