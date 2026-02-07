@@ -1,5 +1,5 @@
 import {BrowserRouter, Link, Route, Routes, useLocation} from 'react-router-dom';
-import {Layout, Menu} from 'antd';
+import {App as AntApp, Layout, Menu} from 'antd';
 import QueryPage from './pages/QueryPage';
 import Admin from './pages/Admin';
 
@@ -23,19 +23,21 @@ function AppMenu() {
 
 function App() {
     return (
-        <BrowserRouter>
-            <Layout style={{minHeight: '100vh'}}>
-                <Header style={{display: 'flex', alignItems: 'center'}}>
-                    <AppMenu/>
-                </Header>
-                <Content>
-                    <Routes>
-                        <Route path="/" element={<QueryPage/>}/>
-                        <Route path="/admin" element={<Admin/>}/>
-                    </Routes>
-                </Content>
-            </Layout>
-        </BrowserRouter>
+        <AntApp>
+            <BrowserRouter>
+                <Layout style={{minHeight: '100vh'}}>
+                    <Header style={{display: 'flex', alignItems: 'center'}}>
+                        <AppMenu/>
+                    </Header>
+                    <Content>
+                        <Routes>
+                            <Route path="/" element={<QueryPage/>}/>
+                            <Route path="/admin" element={<Admin/>}/>
+                        </Routes>
+                    </Content>
+                </Layout>
+            </BrowserRouter>
+        </AntApp>
     );
 }
 

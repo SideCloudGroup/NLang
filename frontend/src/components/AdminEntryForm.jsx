@@ -35,10 +35,10 @@ export default function AdminEntryForm({initial, onSuccess, onCancel}) {
     return (
         <Form form={form} layout="vertical" onFinish={onFinish}>
             <Form.Item name="abbrev" label="缩写" rules={[{required: true, message: '请输入缩写'}]}>
-                <Input placeholder="如 nlk"/>
+                <Input placeholder="如 nlk" autoComplete="off"/>
             </Form.Item>
             <Form.Item name="meaning" label="含义" rules={[{required: true, message: '请输入含义'}]}>
-                <Input placeholder="如 奶龙king"/>
+                <Input placeholder="如 奶龙king" autoComplete="off"/>
             </Form.Item>
             <Form.Item>
                 <Space>

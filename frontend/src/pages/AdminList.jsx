@@ -9,6 +9,7 @@ export default function AdminList() {
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [editingRecord, setEditingRecord] = useState(null);
+    const [deletingRecord, setDeletingRecord] = useState(null);
     const [searchText, setSearchText] = useState('');
 
     const load = async () => {
@@ -37,20 +38,18 @@ export default function AdminList() {
         );
     }, [data, searchText]);
 
-    const handleDelete = (record) => {
-        Modal.confirm({
-            title: '确认删除',
-            content: `删除缩写「${record.abbrev}」的含义「${record.meaning}」？`,
-            onOk: async () => {
-                try {
-                    await deleteEntry(record.id);
-                    message.success('已删除');
-                    load();
-                } catch (e) {
-                    message.error(e.message || '删除失败');
-                }
-            },
-        });
+    const handleDelete = (record) => setDeletingRecord(record);
+
+    const handleDeleteConfirmOk = async () => {
+        if (!deletingRecord) return;
+        try {
+            await deleteEntry(deletingRecord.id);
+            message.success('已删除');
+            setDeletingRecord(null);
+            load();
+        } catch (e) {
+            message.error(e.message || '删除失败');
+        }
     };
 
     const handleEdit = (record) => {
@@ -115,6 +114,7 @@ export default function AdminList() {
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     allowClear
+                    autoComplete="off"
                     style={{maxWidth: 320}}
                 />
             </Space>
@@ -142,6 +142,18 @@ export default function AdminList() {
                     onSuccess={() => handleFormClose(true)}
                     onCancel={() => handleFormClose(false)}
                 />
+            </Modal>
+            <Modal
+                title="确认删除"
+                open={!!deletingRecord}
+                onOk={handleDeleteConfirmOk}
+                onCancel={() => setDeletingRecord(null)}
+                okText="删除"
+                okButtonProps={{danger: true}}
+            >
+                {deletingRecord && (
+                    <span>删除缩写「{deletingRecord.abbrev}」的含义「{deletingRecord.meaning}」？</span>
+                )}
             </Modal>
         </Card>
     );

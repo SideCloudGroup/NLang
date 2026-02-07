@@ -22,10 +22,10 @@ export default function AdminLogin({onSuccess}) {
         <Card title="管理后台登录" style={{maxWidth: 400, margin: '48px auto'}}>
             <Form layout="vertical" onFinish={onFinish}>
                 <Form.Item name="email" label="邮箱" rules={[{required: true}]}>
-                    <Input type="email" placeholder="admin@example.com"/>
+                    <Input type="email" placeholder="admin@example.com" autoComplete="off"/>
                 </Form.Item>
                 <Form.Item name="password" label="密码" rules={[{required: true}]}>
-                    <Input.Password placeholder="密码"/>
+                    <Input.Password placeholder="密码" autoComplete="off"/>
                 </Form.Item>
                 <Form.Item>
                     <Button type="primary" htmlType="submit" loading={loading} block>

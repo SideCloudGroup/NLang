@@ -33,6 +33,7 @@ export default function QueryPage() {
         <Card title="NLang 缩写查询" style={{maxWidth: 560, margin: '24px auto'}}>
             <Input
                 placeholder="输入缩写，如 nlk"
+                autoComplete="off"
                 value={abbrev}
                 onChange={(e) => setAbbrev(e.target.value)}
                 onPressEnter={handleSearch}
