@@ -1,6 +1,8 @@
 import {useEffect, useState} from 'react';
 import {message, Spin} from 'antd';
 import {AUTH_EXPIRED_EVENT, isAdminLoggedIn} from '../api/client';
+import AdminLogin from './AdminLogin';
+import AdminList from './AdminList';
 
 export default function Admin() {
     const [loggedIn, setLoggedIn] = useState(false);

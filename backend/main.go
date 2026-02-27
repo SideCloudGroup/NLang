@@ -31,27 +31,30 @@ func main() {
 		Automigrate: isGoRun,
 	})
 
-	// 公开按缩写查询接口（不经过 collection 的 ListRule，供未登录用户使用）
+	// 公开按缩写查询接口（不经过 collection 的 ListRule，供未登录用户使用；仅支持按单个 abbrev 查询，不能查全表）
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		se.Router.GET("/api/nlang/query", func(e *core.RequestEvent) error {
 			abbrev := e.Request.URL.Query().Get("abbrev")
 			if abbrev == "" {
 				return e.BadRequestError("缺少 abbrev 参数", nil)
 			}
-			records, err := e.App.FindRecordsByFilter(
-				"nlang_entries",
-				"abbrev = {:abbrev}",
-				"",
-				100,
-				0,
-				dbx.Params{"abbrev": abbrev},
-			)
+			var rows []struct {
+				Id      string `db:"id"`
+				Abbrev  string `db:"abbrev"`
+				Meaning string `db:"meaning"`
+			}
+			err := e.App.DB().
+				Select("id", "abbrev", "meaning").
+				From("nlang_entries").
+				AndWhere(dbx.NewExp("abbrev = {:abbrev}", dbx.Params{"abbrev": abbrev})).
+				Limit(100).
+				All(&rows)
 			if err != nil {
 				return e.BadRequestError("查询失败", err)
 			}
-			items := make([]map[string]any, 0, len(records))
-			for _, r := range records {
-				items = append(items, r.PublicExport())
+			items := make([]map[string]any, 0, len(rows))
+			for _, r := range rows {
+				items = append(items, map[string]any{"id": r.Id, "abbrev": r.Abbrev, "meaning": r.Meaning})
 			}
 			return e.JSON(http.StatusOK, map[string]any{"items": items})
 		})

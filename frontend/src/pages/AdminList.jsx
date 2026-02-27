@@ -16,9 +16,10 @@ export default function AdminList() {
         setLoading(true);
         try {
             const items = await listEntries();
-            setData(items);
+            setData(Array.isArray(items) ? items : []);
         } catch (e) {
             message.error(e.message || '加载失败');
+            setData([]);
         } finally {
             setLoading(false);
         }
@@ -29,12 +30,13 @@ export default function AdminList() {
     }, []);
 
     const filteredData = useMemo(() => {
-        if (!searchText.trim()) return data;
+        const source = Array.isArray(data) ? data : [];
+        if (!searchText.trim()) return source;
         const kw = searchText.trim().toLowerCase();
-        return data.filter(
+        return source.filter(
             (row) =>
-                (row.abbrev && row.abbrev.toLowerCase().includes(kw)) ||
-                (row.meaning && row.meaning.toLowerCase().includes(kw))
+                (row && row.abbrev && row.abbrev.toLowerCase().includes(kw)) ||
+                (row && row.meaning && row.meaning.toLowerCase().includes(kw))
         );
     }, [data, searchText]);
 
