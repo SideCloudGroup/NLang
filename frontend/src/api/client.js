@@ -46,8 +46,8 @@ function headers(includeAuth = false) {
 }
 
 export async function queryAbbrev(abbrev) {
-    const q = encodeURIComponent(`(abbrev='${String(abbrev).replace(/'/g, "\\'")}')`);
-    const res = await fetch(`${getApiBase()}/api/collections/nlang_entries/records?filter=${q}`, {
+    const enc = encodeURIComponent(abbrev);
+    const res = await fetch(`${getApiBase()}/api/nlang/query?abbrev=${enc}`, {
         headers: headers(false),
     });
     if (!res.ok) throw new Error(res.statusText);
@@ -87,7 +87,7 @@ export async function listEntries() {
     const res = await fetch(`${getApiBase()}/api/collections/nlang_entries/records?perPage=500`, {
         headers: headers(true),
     });
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
         clearTokenAndNotifyExpired();
         throw new Error('未授权');
     }
@@ -102,7 +102,7 @@ export async function createEntry(abbrev, meaning) {
         headers: headers(true),
         body: JSON.stringify({abbrev: abbrev.trim().toLowerCase(), meaning: meaning.trim()}),
     });
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
         clearTokenAndNotifyExpired();
         throw new Error('未授权');
     }
@@ -119,7 +119,7 @@ export async function updateEntry(id, abbrev, meaning) {
         headers: headers(true),
         body: JSON.stringify({abbrev: abbrev.trim().toLowerCase(), meaning: meaning.trim()}),
     });
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
         clearTokenAndNotifyExpired();
         throw new Error('未授权');
     }
@@ -135,7 +135,7 @@ export async function deleteEntry(id) {
         method: 'DELETE',
         headers: headers(true),
     });
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
         clearTokenAndNotifyExpired();
         throw new Error('未授权');
     }

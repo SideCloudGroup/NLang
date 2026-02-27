@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {message} from 'antd';
+import {message, Spin} from 'antd';
 import {AUTH_EXPIRED_EVENT, isAdminLoggedIn} from '../api/client';
 
 export default function Admin() {
@@ -20,7 +20,7 @@ export default function Admin() {
         return () => window.removeEventListener(AUTH_EXPIRED_EVENT, onAuthExpired);
     }, []);
 
-    if (checking) return null;
+    if (checking) return <Spin size="large" style={{display: 'block', margin: '48px auto'}}/>;
     if (!loggedIn) return <AdminLogin onSuccess={() => setLoggedIn(true)}/>;
     return <AdminList/>;
 }
