@@ -1,0 +1,11 @@
+api_keys = ["123456"]
+
+[db]
+path = "backend/data/nlang.db"
+
+[server]
+host = "127.0.0.1"
+port = 8000
+
+[mcp]
+mount_path = "/mcp"

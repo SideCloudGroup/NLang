@@ -1,10 +1,13 @@
-version: '3.8'
-
 services:
   nlang:
-    image: ghcr.io/sidecloudgroup/nlang:latest
-    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nlang:local
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
-      - ./data:/app/pb_data
+      - ./config.toml:/app/config.toml:ro
+      - ./backend/data:/app/backend/data
+    restart: unless-stopped
+
