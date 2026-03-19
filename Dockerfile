@@ -33,7 +33,6 @@ WORKDIR /app
 RUN apk add --no-cache python3 nodejs npm
 
 COPY Caddyfile /app/Caddyfile
-COPY config.toml /app/config.toml
 
 COPY --from=backend_runtime /usr/local /usr/local
 COPY --from=backend_runtime /app/backend /app/backend
