@@ -38,3 +38,20 @@ class DeleteEntryRequest(BaseModel):
 
 class DeleteEntryResponse(BaseModel):
     deleted: int = Field(..., ge=0, description="删除条数（按 abbr+value 精确匹配）")
+
+
+class SegmentRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=4096, description="待切分字符串")
+
+
+class SegmentPair(BaseModel):
+    token: str = Field(..., description="命中的 token")
+    values: list[str] = Field(..., description="token 对应的候选值列表")
+
+
+class SegmentCandidate(BaseModel):
+    pairs: list[SegmentPair] = Field(..., description="按切分顺序返回的 token-value 对")
+
+
+class SegmentResponse(BaseModel):
+    candidates: list[SegmentCandidate] = Field(default_factory=list, description="所有可行切分方案")

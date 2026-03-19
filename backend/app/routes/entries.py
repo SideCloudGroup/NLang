@@ -10,6 +10,10 @@ from ..models import (
     DeleteEntryResponse,
     EntryResponse,
     ErrorResponse,
+    SegmentCandidate,
+    SegmentPair,
+    SegmentRequest,
+    SegmentResponse,
     UpdateEntryByAbbrValueRequest,
     UpdateEntryByAbbrValueResponse,
 )
@@ -21,7 +25,7 @@ router = APIRouter(prefix="/api/entries", tags=["entries"])
 @router.get(
     "",
     response_model=list[EntryResponse],
-    summary="按缩写查询词条（免鉴权）",
+    summary="按缩写查询词条",
     operation_id="list_entries",
 )
 async def list_entries(
@@ -33,6 +37,49 @@ async def list_entries(
     """按 `abbr` 精确匹配查询词条，支持分页。"""
     entries = await store.list_by_abbr(abbr, limit=limit, offset=offset)
     return [EntryResponse(**e.__dict__) for e in entries]
+
+
+@router.post(
+    "/segment",
+    response_model=SegmentResponse,
+    summary="字符串切分",
+    operation_id="segment_text_with_dictionary",
+)
+async def segment_text(
+        payload: SegmentRequest,
+        store: EntryStore = Depends(get_entry_store),
+) -> SegmentResponse:
+    """基于 entries.abbr 词典，返回所有可行切分方案。"""
+    text = payload.text
+    token_set = set(await store.list_distinct_abbrs())
+    if not token_set:
+        return SegmentResponse(candidates=[])
+
+    abbr_to_values = await store.map_values_by_abbrs(list(token_set))
+
+    token_lengths = sorted({len(t) for t in token_set if t}, reverse=True)
+    n = len(text)
+    dp: list[list[list[str]]] = [[] for _ in range(n + 1)]
+    dp[n] = [[]]
+
+    for i in range(n - 1, -1, -1):
+        paths: list[list[str]] = []
+        for length in token_lengths:
+            end = i + length
+            if end > n:
+                continue
+            piece = text[i:end]
+            if piece not in token_set:
+                continue
+            for suffix in dp[end]:
+                paths.append([piece, *suffix])
+        dp[i] = paths
+
+    candidates = []
+    for parts in dp[0]:
+        pairs = [SegmentPair(token=token, values=abbr_to_values.get(token, [token])) for token in parts]
+        candidates.append(SegmentCandidate(pairs=pairs))
+    return SegmentResponse(candidates=candidates)
 
 
 @router.post(
@@ -79,7 +126,7 @@ async def update_entry(
     target_abbr = payload.new_abbr if payload.new_abbr is not None else payload.abbr
     target_value = payload.new_value if payload.new_value is not None else payload.value
     if (target_abbr != payload.abbr or target_value != payload.value) and await store.exists_abbr_value(
-        target_abbr, target_value
+            target_abbr, target_value
     ):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

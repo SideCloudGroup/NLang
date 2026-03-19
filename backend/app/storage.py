@@ -20,6 +20,10 @@ class EntryStore(Protocol):
 
     async def list_by_abbr(self, abbr: str, *, limit: int, offset: int) -> list[Entry]: ...
 
+    async def list_distinct_abbrs(self) -> list[str]: ...
+
+    async def map_values_by_abbrs(self, abbrs: list[str]) -> dict[str, list[str]]: ...
+
     async def create(self, abbr: str, value: str) -> Entry: ...
 
     async def update_by_abbr_value(
@@ -69,6 +73,45 @@ class SQLiteEntryStore:
         )
         rows = await cur.fetchall()
         return [_row_to_entry(r) for r in rows]
+
+    async def list_distinct_abbrs(self) -> list[str]:
+        cur = await self._db.execute(
+            """
+            SELECT DISTINCT abbr
+            FROM entries
+            WHERE abbr IS NOT NULL
+              AND abbr <> '';
+            """
+        )
+        rows = await cur.fetchall()
+        return [str(r["abbr"]) for r in rows]
+
+    async def map_values_by_abbrs(self, abbrs: list[str]) -> dict[str, list[str]]:
+        if not abbrs:
+            return {}
+
+        unique_abbrs = list(dict.fromkeys(abbrs))
+        placeholders = ", ".join("?" for _ in unique_abbrs)
+        cur = await self._db.execute(
+            f"""
+            SELECT abbr, value
+            FROM entries
+            WHERE abbr IN ({placeholders})
+            ORDER BY updated_at DESC, id DESC;
+            """,
+            tuple(unique_abbrs),
+        )
+        rows = await cur.fetchall()
+
+        result: dict[str, list[str]] = {}
+        for row in rows:
+            abbr = str(row["abbr"])
+            value = str(row["value"])
+            if abbr not in result:
+                result[abbr] = []
+            if value not in result[abbr]:
+                result[abbr].append(value)
+        return result
 
     async def create(self, abbr: str, value: str) -> Entry:
         cur = await self._db.execute(

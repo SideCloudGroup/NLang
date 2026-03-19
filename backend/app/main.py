@@ -27,6 +27,7 @@ async def app_lifespan(app: FastAPI):
         await db.close()
     yield
 
+
 class ForwardMCPAuth(httpx.Auth):
     """将 MCP 客户端请求中的 Authorization header 转发给内部 FastAPI 调用。"""
 
@@ -39,6 +40,7 @@ class ForwardMCPAuth(httpx.Auth):
         except Exception:
             pass
         yield request
+
 
 def create_app() -> FastAPI:
     cfg = load_config()
