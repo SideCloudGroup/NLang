@@ -25,7 +25,8 @@ router = APIRouter(prefix="/api/entries", tags=["entries"])
 @router.get(
     "",
     response_model=list[EntryResponse],
-    summary="按缩写查询词条",
+    summary="列出缩写词条",
+    description="按缩写精确匹配列出词条，支持 limit 和 offset 分页参数。",
     operation_id="list_entries",
 )
 async def list_entries(
@@ -34,7 +35,7 @@ async def list_entries(
         offset: int = Query(0, ge=0, description="分页偏移"),
         store: EntryStore = Depends(get_entry_store),
 ) -> list[EntryResponse]:
-    """按 `abbr` 精确匹配查询词条，支持分页。"""
+    """列出指定缩写下的所有词条，支持分页。"""
     entries = await store.list_by_abbr(abbr, limit=limit, offset=offset)
     return [EntryResponse(**e.__dict__) for e in entries]
 
@@ -42,14 +43,15 @@ async def list_entries(
 @router.post(
     "/segment",
     response_model=SegmentResponse,
-    summary="字符串切分",
-    operation_id="segment_text_with_dictionary",
+    summary="搜索缩写的可行组合",
+    description="基于已录入的缩写词典，对输入文本执行多路径切分，返回所有可行的缩写组合。",
+    operation_id="search_abbr",
 )
-async def segment_text(
+async def search_abbr(
         payload: SegmentRequest,
         store: EntryStore = Depends(get_entry_store),
 ) -> SegmentResponse:
-    """基于 entries.abbr 词典，返回所有可行切分方案。"""
+    """基于缩写词典搜索输入文本的所有可行切分组合。"""
     text = payload.text
     token_set = set(await store.list_distinct_abbrs())
     if not token_set:
@@ -87,7 +89,8 @@ async def segment_text(
     status_code=status.HTTP_201_CREATED,
     response_model=EntryResponse,
     responses={401: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
-    summary="新增词条",
+    summary="创建一条缩写",
+    description="创建一条缩写词条；同一缩写可对应多个不同 value，但重复的缩写+value 会被拒绝。",
     dependencies=[Depends(require_api_key)],
     operation_id="create_entry",
 )
@@ -95,7 +98,7 @@ async def create_entry(
         payload: CreateEntryRequest,
         store: EntryStore = Depends(get_entry_store),
 ) -> EntryResponse:
-    """新增一条词条。缩写 `abbr` 允许重复。"""
+    """创建一条缩写词条；同一缩写可对应多条 value。"""
     if await store.exists_abbr_value(payload.abbr, payload.value):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -109,15 +112,16 @@ async def create_entry(
     "",
     response_model=UpdateEntryByAbbrValueResponse,
     responses={401: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
-    summary="按缩写+释义更新词条",
+    summary="更新一条缩写",
+    description="按缩写+value 精确匹配更新词条，可修改缩写、value 或两者，返回更新条数。",
     dependencies=[Depends(require_api_key)],
     operation_id="update_entries_by_abbr_value",
 )
-async def update_entry(
+async def update_entries_by_abbr_value(
         payload: UpdateEntryByAbbrValueRequest,
         store: EntryStore = Depends(get_entry_store),
 ) -> UpdateEntryByAbbrValueResponse:
-    """按 `abbr` + `value` 精确匹配更新，返回更新条数。"""
+    """按缩写+value 精确匹配更新一条词条。"""
     if payload.new_abbr is None and payload.new_value is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -146,14 +150,15 @@ async def update_entry(
     "",
     response_model=DeleteEntryResponse,
     responses={401: {"model": ErrorResponse}},
-    summary="按缩写+释义删除词条",
+    summary="删除一条缩写",
+    description="按缩写+value 精确匹配删除一条词条，返回删除条数。",
     dependencies=[Depends(require_api_key)],
     operation_id="delete_entries_by_abbr_value",
 )
-async def delete_entry(
+async def delete_entries_by_abbr_value(
         payload: DeleteEntryRequest,
         store: EntryStore = Depends(get_entry_store),
 ) -> DeleteEntryResponse:
-    """按 `abbr` + `value` 精确匹配删除，返回删除条数。"""
+    """按缩写+value 精确匹配删除一条词条。"""
     deleted = await store.delete_by_abbr_value(payload.abbr, payload.value)
     return DeleteEntryResponse(deleted=deleted)

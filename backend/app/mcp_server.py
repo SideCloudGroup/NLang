@@ -26,7 +26,7 @@ async def lookup(abbr: str, limit: int = 50, offset: int = 0) -> list[dict]:
 
 @mcp.tool(
     name="upsert",
-    description="新增一条缩写-释义（需要 api_key）。注意：允许 abbr 重复，也允许 (abbr,value) 重复。",
+    description="新增一条缩写-释义（需要 api_key）。注意：允许缩写重复，也允许 (缩写,value) 重复。",
 )
 async def upsert(abbr: str, value: str, api_key: str) -> dict:
     cfg = load_config()
@@ -44,7 +44,7 @@ async def upsert(abbr: str, value: str, api_key: str) -> dict:
 
 @mcp.tool(
     name="delete",
-    description="按 abbr+value 精确删除词条（需要 api_key）。",
+    description="按缩写+value精确删除词条（需要 api_key）。",
 )
 async def delete(abbr: str, value: str, api_key: str) -> dict:
     cfg = load_config()
